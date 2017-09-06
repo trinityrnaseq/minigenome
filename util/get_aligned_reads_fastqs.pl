@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use FindBin;
-use lib ("$FindBin::Bin/PerlLib");
+use lib ("$FindBin::Bin/../PerlLib");
 use Fastq_reader;
 use Process_cmd;
 use Data::Dumper;

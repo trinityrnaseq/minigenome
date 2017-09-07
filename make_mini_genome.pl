@@ -444,6 +444,7 @@ sub get_gene_span_info {
     my ($chr, $min_lend, $max_rend, $orient);
 
     my $revised_gene_gtf_text = "";
+    my $template_line = "";
 
     my @gtf_lines = split(/\n/, $gene_gtf_text);
     foreach my $line (@gtf_lines) {
@@ -457,11 +458,11 @@ sub get_gene_span_info {
             ## check to ensure the rest of the info matches up
             ## if discrepancy, use first found.
             if ($chr ne $scaffold) {
-                print STDERR "Error, chr discrepancy in gtf info for $line\n";
+                print STDERR "Error, chr discrepancy in gtf info [chr: [$chr] vs. [$scaffold] ]for $line\n\ttemplate: $template_line\n\n";
                 next; 
             }
             if ($orient ne $strand) {
-                print STDERR "Error, strand conflict in gtf info for $line\n";
+                print STDERR "Error, strand conflict [$orient] vs. [$strand] in gtf info for $line\n\ttemplate: $template_line\n\n";
                 next;
             }
             if ($lend < $min_lend) {
@@ -475,6 +476,7 @@ sub get_gene_span_info {
         else {
             ## init
             ($chr, $min_lend, $max_rend, $orient) = ($scaffold, $lend, $rend, $strand);
+            $template_line = "$line";
         }
         $revised_gene_gtf_text .= "$line\n";
     }

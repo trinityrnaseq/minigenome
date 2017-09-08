@@ -81,6 +81,10 @@ unless ($gtf_file && $genome_fasta_file) {
     die $usage;
 }
 
+
+my %SEQLENGTHS = &parse_seq_lengths("$genome_fasta_file");
+
+
 main: {
 
     my %RESTRICT;
@@ -342,15 +346,26 @@ sub get_gene_contig_gtf {
     # print STDERR "INFO: gene_chr: $gene_chr, lend: $gene_lend, rend: $gene_rend\n";
 
     #print STDERR "\n\nGENE_GTF:\n$gene_gtf\n\n";
+
+    my $adj_lend = $gene_lend - $genome_flank_size;
+    if ($adj_lend < 1) {
+        $adj_lend = 1;
+    }
     
+    my $adj_rend = $gene_rend + $genome_flank_size;
+    my $chr_len = $SEQLENGTHS{$gene_chr};
+    if ($adj_rend > $chr_len) {
+        $adj_rend = $chr_len;
+    }
+
     
     my $seq_region = &get_genomic_region_sequence($genome_fasta_file,
                                                   $gene_chr, 
-                                                  $gene_lend - $genome_flank_size, 
-                                                  $gene_rend + $genome_flank_size,
+                                                  $adj_lend,
+                                                  $adj_rend,
                                                   $gene_orient);
 
-    my $gene_contig_gtf = &transform_gtf_coordinates($gene_lend - $genome_flank_size,
+    my $gene_contig_gtf = &transform_gtf_coordinates($adj_lend,
                                                      $gene_gtf,
                                                      length($seq_region),
                                                      $gene_orient);
@@ -484,6 +499,12 @@ sub get_gene_span_info {
     if ($max_rend - $min_lend > 100e6) {
         confess "Error - no gene spans 100M bases in length.... likely problem";
     }
+
+
+    unless ($min_lend > 0 && $max_rend > 0) {
+        die "Error, coordinate span is off: [$min_lend-$max_rend],   gtf lines: " . join("\n", @gtf_lines) . "\n";
+    }
+    
     
     return($chr, $min_lend, $max_rend, $orient, $revised_gene_gtf_text);
 }
@@ -551,6 +572,30 @@ sub process_cmd {
 
     return;
 }
+
+
+####
+sub parse_seq_lengths {
+    my ($genome_fasta_file) = @_;
+
+    my $fai_file = "$genome_fasta_file.fai";
+    unless (-s $fai_file) {
+        &process_cmd("samtools faidx $genome_fasta_file");
+    }
+
+    my %seqlengths;
+    open(my $fh, $fai_file)  or die "Error, cannot open file: $fai_file";
+    while (<$fh>) {
+        chomp;
+        my ($acc, $len, @rest) = split(/\t/);
+        $seqlengths{$acc} = $len;
+    }
+    close $fh;
+
+    return(%seqlengths);
+}
+
+
 
 ####
 sub make_gene_info_structs {

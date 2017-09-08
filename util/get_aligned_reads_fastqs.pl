@@ -82,6 +82,7 @@ sub get_aligned_read_names {
     while (<$fh>) {
         my @x = split(/\t/);
         my $acc = $x[0];
+        $acc =~ s/\/[12]$//;
         my $cigar = $x[5];
         if ($cigar =~ /M/) {
             $aligned_reads{$acc} = 1;

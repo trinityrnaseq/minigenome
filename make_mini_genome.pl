@@ -55,6 +55,8 @@ my $genome_fasta_file;
 my $shrink_introns_flag = 0;
 my $accs_restrict_file = "";
 
+my $DEBUG;
+
 &GetOptions ( 'h' => \$help_flag,
               
               'gtf=s' => \$gtf_file,
@@ -69,7 +71,7 @@ my $accs_restrict_file = "";
 
               'accs_restrict_file=s' => \$accs_restrict_file,
               
-              
+              'debug|d' => \$DEBUG,
     );
 
 
@@ -99,12 +101,16 @@ main: {
             }
         }
         close $fh;
+
+        if ($DEBUG) {
+            print STDERR "accessions restricted to: " . Dumper(\%RESTRICT);
+        }
     }
     
     
     my %gene_to_gtf = &extract_gene_gtfs($gtf_file);
 
-
+    
     my @gene_info_structs = &make_gene_info_structs(%gene_to_gtf);
     
     open (my $out_genome_ofh, ">$out_prefix.fa.tmp") or die "Error, cannot write to $out_prefix.fa.tmp";
@@ -117,22 +123,29 @@ main: {
 
     my $supercontig = "";
 
-    my $counter = 0;
-    
     foreach my $gene_struct (@gene_info_structs) {
 
-        $counter++; if ($counter > 1000) { last; }
-                                
+        
+        my $gene_id = $gene_struct->{gene};
+        
         my $gene_gtf = $gene_struct->{gtf};
 
-
+        print STDERR "gene: " . Dumper($gene_struct) . "\n" if $DEBUG;
+        
         if (%RESTRICT) {
 
-            unless (&includes_restricted_id($gene_gtf, \%RESTRICT)) {
+            my $found_id = &includes_restricted_id($gene_gtf, \%RESTRICT);
+
+            if ($found_id) {
+                print STDERR "Recovered ID: $found_id\n";
+                delete $RESTRICT{$found_id};
+            }
+            else {
+                print STDERR "\n-skipping:\n$gene_gtf\n\tnot in restrict list.\n\n" if $DEBUG;
                 next;
             }
         }
-                
+        
         my ($gene_supercontig_gtf, $gene_sequence_region) = &get_gene_contig_gtf($gene_gtf, $genome_fasta_file);
         
         ($gene_supercontig_gtf, $gene_sequence_region) = &shrink_introns($gene_supercontig_gtf, $gene_sequence_region, $max_intron_length);
@@ -169,6 +182,11 @@ main: {
         rename("$out_prefix.fa.tmp", "$out_prefix.fa");
         rename("$out_prefix.gtf.tmp", "$out_prefix.gtf");
     }
+
+    if (%RESTRICT) {
+        die "Error, did not locate entries for: " . Dumper(\%RESTRICT);
+    }
+    
     
     exit(0);
     
@@ -631,24 +649,24 @@ sub includes_restricted_id {
     my $gene_id = $1;
 
     if ($restrict_href->{$gene_id}) {
-        return(1);
+        return($gene_id);
     }
 
     if ($gene_gtf =~ /gene_name \"([^\"]+)\"/) {
         my $gene_name = $1;
         if ($restrict_href->{$gene_name}) {
-            return(1);
+            return($gene_name);
         }
     }
     
     while ($gene_gtf =~ /transcript_id \"([^\"]+)\"/g) {
         my $tx_id = $1;
         if ($restrict_href->{$tx_id}) {
-            return(1);
+            return($tx_id);
         }
     }
 
-    return(0);
+    return undef;
 }
 
 

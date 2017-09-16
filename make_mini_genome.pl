@@ -666,6 +666,15 @@ sub includes_restricted_id {
         }
     }
 
+    while ($gene_gtf =~ /orig_coord_info \"([^\"]+)\"/g) {
+        my $orig_info = $1;
+        my @pts = split(',', $orig_info);
+        my $orig_gene_id = $pts[1];
+        if ($restrict_href->{$orig_gene_id}) {
+            return($orig_gene_id);
+        }
+    }
+    
     return undef;
 }
 

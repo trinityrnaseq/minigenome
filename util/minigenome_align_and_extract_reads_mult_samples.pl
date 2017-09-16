@@ -33,7 +33,7 @@ main: {
         my ($sample_id, $left_fq, $right_fq) = @$read_set_aref;
 
         
-        &process_cmd("set -eof pipefail; hisat2 --dta -x $minigenome_fa -1 $left_fq -2 $right_fq | samtools view -Sb | samtools sort -o $sample_id.hisat2.bam");
+        &process_cmd("set -eof pipefail; hisat2 --dta -x $minigenome_fa -1 $left_fq -2 $right_fq | samtools view -Sb -F 4 | samtools sort -o $sample_id.hisat2.bam");
 
         ## extract the reads that map to the mini-genome:
 

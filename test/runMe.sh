@@ -13,7 +13,7 @@ hisat2_extract_exons.py  minigenome.gtf > minigenome.gtf.exons
 
 hisat2-build --exon ./minigenome.gtf.exons --ss ./minigenome.gtf.ss  ./minigenome.fa ./minigenome.fa
 
-hisat2 --dta -x minigenome.fa -1 data/reads_1.fq -2 data/reads_2.fq | samtools view -Sb | samtools sort -o alignments.hisat2.bam
+hisat2 --dta -x minigenome.fa -1 data/reads_1.fq -2 data/reads_2.fq | samtools view -Sb -F 4 | samtools sort -o alignments.hisat2.bam
 
 ## extract the reads that map to the mini-genome:
 

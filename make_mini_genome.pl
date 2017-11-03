@@ -624,19 +624,24 @@ sub make_gene_info_structs {
     foreach my $gene (keys %gene_to_gtf) {
         my $gtf = $gene_to_gtf{$gene};
 
-        my ($chr, $min_lend, $max_rend, $orient, $revised_gene_gtf_text) = &get_gene_span_info($gtf);
-
-        my $struct = { chr => $chr,
-                       lend => $min_lend,
-                       rend => $max_rend,
-                       orient => $orient,
-                       gtf => $revised_gene_gtf_text,
-                       gene => $gene,
+        eval {
+            my ($chr, $min_lend, $max_rend, $orient, $revised_gene_gtf_text) = &get_gene_span_info($gtf);
+            
+            my $struct = { chr => $chr,
+                           lend => $min_lend,
+                           rend => $max_rend,
+                           orient => $orient,
+                           gtf => $revised_gene_gtf_text,
+                           gene => $gene,
+            };
+            
+            push (@gene_structs, $struct);
         };
-
-        push (@gene_structs, $struct);
+        if ($@) {
+            print STDERR "$@";
+        }
     }
-
+    
     return(@gene_structs);
 }
 

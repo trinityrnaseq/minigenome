@@ -41,6 +41,8 @@ my $usage = <<__EOUSAGE__;
 #
 #  --accs_restrict_file <string>    file containing lists of gene or transcript identifiers to restrict to
 #
+#  --single_contig_per_gene         yields a separate contig entry for each gene instead of one long genomic contig.
+#
 ###############################################################################################
 
 
@@ -54,6 +56,7 @@ my $gtf_file;
 my $genome_fasta_file;
 my $shrink_introns_flag = 0;
 my $accs_restrict_file = "";
+my $single_contig_per_gene;
 
 my $DEBUG;
 
@@ -70,6 +73,8 @@ my $DEBUG;
               'out_prefix=s' => \$out_prefix,
 
               'accs_restrict_file=s' => \$accs_restrict_file,
+
+              'single_contig_per_gene' => \$single_contig_per_gene,
               
               'debug|d' => \$DEBUG,
     );
@@ -150,25 +155,38 @@ main: {
         
         ($gene_supercontig_gtf, $gene_sequence_region) = &shrink_introns($gene_supercontig_gtf, $gene_sequence_region, $max_intron_length);
         
-        if ($supercontig) {
+        if ($supercontig && ! $single_contig_per_gene) {
             $supercontig .= ("N" x 1000);
         }
         
         $gene_supercontig_gtf = &adjust_gtf_coordinates($gene_supercontig_gtf, length($supercontig));
 
-        $supercontig .= $gene_sequence_region;
+        my $minigenome_contig_name = "minig-$gene_id";
+           
+        if (! $single_contig_per_gene) {
+            $supercontig .= $gene_sequence_region;
+            $minigenome_contig_name = "minigenome";
+        }
         
-        my $out_gtf = &set_gtf_scaffold_name("minigenome", $gene_supercontig_gtf);
+        my $out_gtf = &set_gtf_scaffold_name($minigenome_contig_name, $gene_supercontig_gtf);
 
         #$out_gtf = &include_gene_name_in_gene_id($out_gtf);
         
         print $out_gtf_ofh $out_gtf;
-        
+
+        if ($single_contig_per_gene) {
+            $gene_sequence_region =~ s/(\S{60})/$1\n/g;
+            print $out_genome_ofh ">$minigenome_contig_name\n$gene_sequence_region\n";
+        }
     }
 
-    $supercontig =~ s/(\S{60})/$1\n/g;
+    if (! $single_contig_per_gene) {
     
-    print $out_genome_ofh ">minigenome\n$supercontig\n";
+        $supercontig =~ s/(\S{60})/$1\n/g;
+        
+        print $out_genome_ofh ">minigenome\n$supercontig\n";
+    }
+
     
     print STDERR "Done.\n";
     

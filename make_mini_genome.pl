@@ -95,7 +95,7 @@ my %SEQLENGTHS = &parse_seq_lengths("$genome_fasta_file");
 main: {
 
     my %RESTRICT;
-
+    my $RESTRICT_FLAG = 0;
     if ($accs_restrict_file) {
         open(my $fh, $accs_restrict_file) or die $!;
         while (<$fh>) {
@@ -110,8 +110,9 @@ main: {
         if ($DEBUG) {
             print STDERR "accessions restricted to: " . Dumper(\%RESTRICT);
         }
+        $RESTRICT_FLAG = 1;
     }
-    
+
     
     my %gene_to_gtf = &extract_gene_gtfs($gtf_file);
 
@@ -137,7 +138,7 @@ main: {
 
         print STDERR "gene: " . Dumper($gene_struct) . "\n" if $DEBUG;
         
-        if (%RESTRICT) {
+        if ($RESTRICT_FLAG) {
 
             my $found_id = &includes_restricted_id($gene_gtf, \%RESTRICT);
 

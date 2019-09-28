@@ -16,7 +16,7 @@ my $min_intron_length = 200;
 my $genome_flank_size = 1000;
 
 my $out_prefix = "minigenome";
-
+my $CONTIG_NAME_USE = "";
 
 my $usage = <<__EOUSAGE__;
 
@@ -42,6 +42,8 @@ my $usage = <<__EOUSAGE__;
 #  --accs_restrict_file <string>    file containing lists of gene or transcript identifiers to restrict to
 #
 #  --single_contig_per_gene         yields a separate contig entry for each gene instead of one long genomic contig.
+#
+#  --contig_name_use <string>       accession for genomic contig (if ! --single_contig_per_gene)
 #
 ###############################################################################################
 
@@ -75,6 +77,8 @@ my $DEBUG;
               'accs_restrict_file=s' => \$accs_restrict_file,
 
               'single_contig_per_gene' => \$single_contig_per_gene,
+              
+              'contig_name_use=s' => \$CONTIG_NAME_USE,
               
               'debug|d' => \$DEBUG,
     );
@@ -154,7 +158,9 @@ main: {
         
         my ($gene_supercontig_gtf, $gene_sequence_region) = &get_gene_contig_gtf($gene_gtf, $genome_fasta_file);
         
-        ($gene_supercontig_gtf, $gene_sequence_region) = &shrink_introns($gene_supercontig_gtf, $gene_sequence_region, $max_intron_length);
+        if ($shrink_introns_flag) {
+            ($gene_supercontig_gtf, $gene_sequence_region) = &shrink_introns($gene_supercontig_gtf, $gene_sequence_region, $max_intron_length);
+        }
         
         if ($supercontig && ! $single_contig_per_gene) {
             $supercontig .= ("N" x 1000);
@@ -166,7 +172,7 @@ main: {
            
         if (! $single_contig_per_gene) {
             $supercontig .= $gene_sequence_region;
-            $minigenome_contig_name = "minigenome";
+            $minigenome_contig_name = $CONTIG_NAME_USE || "minigenome";
         }
         
         my $out_gtf = &set_gtf_scaffold_name($minigenome_contig_name, $gene_supercontig_gtf);
@@ -184,10 +190,10 @@ main: {
     if (! $single_contig_per_gene) {
     
         $supercontig =~ s/(\S{60})/$1\n/g;
-        
-        print $out_genome_ofh ">minigenome\n$supercontig\n";
+        my $minigenome_contig_name = $CONTIG_NAME_USE || "minigenome";
+        print $out_genome_ofh ">$minigenome_contig_name\n$supercontig\n";
     }
-
+    
     
     print STDERR "Done.\n";
     

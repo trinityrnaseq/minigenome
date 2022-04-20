@@ -73,9 +73,9 @@ def main():
             segment_len = rend - lend + 1
 
             contig_new_lend += 1
-            contig_new_rend += segment_len - 1
+            contig_new_rend += contig_new_lend + segment_len - 1
 
-            print("\t".join([str(lend), str(rend), str(contig_new_lend), str(contig_new_rend)]), file=minigenome_bed_ofh)
+            print("\t".join([chromosome, str(lend), str(rend), str(contig_new_lend), str(contig_new_rend)]), file=minigenome_bed_ofh)
 
             # add short N spacer
             contig_new_lend += Nspacer_length

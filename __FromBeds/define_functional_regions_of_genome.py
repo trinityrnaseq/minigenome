@@ -23,13 +23,18 @@ def main():
     parser.add_argument("--ref_annot", type=str, required=False, help="reference annotation bed file")
     parser.add_argument("--trans_bulk", type=str, required=False, help="bulk RNA-seq transcripts")
     parser.add_argument("--trans_SC", type=str, required=False, help="single cell RNA-seq transcripts")
-
-
+    parser.add_argument("--output_bed", "-O", type=str, default="merged.bed", help="output bed file")
+    
     args = parser.parse_args()
 
     ref_annot_bed = args.ref_annot
     trans_bulk_bed = args.trans_bulk
     trans_SC_bed = args.trans_SC
+    output_bed_filename = args.output_bed
+
+    if not (ref_annot_bed or trans_bulk_bed or trans_SC_bed):
+        exit("use --help for menu")
+    
 
     ref_annot_extend = 1000
 
@@ -60,7 +65,7 @@ def main():
             pr_merged = pr_trans_SC
 
     logger.info("-Writing output intervals")
-    pr_merged.to_bed("merged.bed")
+    pr_merged.to_bed(output_bed_filename)
     logger.info("-done")
 
     sys.exit(0)

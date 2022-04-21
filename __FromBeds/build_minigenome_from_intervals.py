@@ -27,12 +27,14 @@ def main():
 
     if not os.path.exists(f"{genome_fasta_file}.fai"):
         logger.info(f"Creating fasta index {genome_fasta_file}.fai")
-        subprocess.check_call(f"samtools faidx {genome_fasta_file}")
+        subprocess.check_call(f"samtools faidx {genome_fasta_file}", shell=True)
 
 
     logger.info("parsing {}".format(intervals_bed_file))
-    intervals = pd.read_csv(intervals_bed_file, sep="\t", names=["Chromosome", "Start", "End"])
-
+    intervals = pd.read_csv(intervals_bed_file, sep="\t", header=None)
+    intervals = intervals.iloc[:,[0,1,2]]
+    intervals.columns = ["Chromosome", "Start", "End"]
+    
     # just be sure they're non-overlapping
     logger.info("merging intervals just in case...")
     pr_intervals = pr.PyRanges(intervals).merge(strand=False)

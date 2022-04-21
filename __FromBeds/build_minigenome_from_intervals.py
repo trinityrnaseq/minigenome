@@ -34,6 +34,8 @@ def main():
     intervals = pd.read_csv(intervals_bed_file, sep="\t", header=None)
     intervals = intervals.iloc[:,[0,1,2]]
     intervals.columns = ["Chromosome", "Start", "End"]
+
+    intervals = intervals.astype({'Start':'int', 'End':'int'})
     
     # just be sure they're non-overlapping
     logger.info("merging intervals just in case...")
@@ -73,9 +75,9 @@ def main():
             lend = max(row.Start, 1) # avoid any incoming negative coordinates
             rend = row.End
             segment_len = rend - lend + 1
-
+            
             contig_new_lend = contig_new_rend + 1
-            contig_new_rend += contig_new_lend + segment_len - 1
+            contig_new_rend = contig_new_lend + segment_len - 1
             
             print("\t".join([chromosome, str(lend), str(rend), str(contig_new_lend), str(contig_new_rend)]), file=minigenome_bed_ofh)
 

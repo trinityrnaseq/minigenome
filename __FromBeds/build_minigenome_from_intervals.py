@@ -82,10 +82,12 @@ def main():
             print("\t".join([chromosome, str(lend), str(rend), str(contig_new_lend), str(contig_new_rend)]), file=minigenome_bed_ofh)
 
             # add short N spacer
-            contig_new_lend += Nspacer_length
-
-            genome_seq = chromosome_seq[lend:rend+1]
+            
+            genome_seq = chromosome_seq[lend-1:rend]  # remember indexing of sequence is from zero!
             genome_seq += Nspacer
+
+            contig_new_rend += Nspacer_length
+            
             print(genome_seq, file=minigenome_fa_ofh, end='')
 
         print("", file=minigenome_fa_ofh) # newline seq separator

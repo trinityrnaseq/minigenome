@@ -50,9 +50,9 @@ def main():
     Nspacer_length = 10
     Nspacer = "N" * Nspacer_length
 
-    minigenome_bed_ofh = open("minigenome.bed", 'wt')
+    minigenome_bed_ofh = open("minigenome.coord_translation.tsv", 'wt')
     print("\t".join(["Chromosome", "Start", "End", "NewStart", "NewEnd"]), file=minigenome_bed_ofh)
-
+    
     minigenome_fa_ofh = open("minigenome.fa", "wt")
     
     for chromosome in chromosomes:
@@ -74,9 +74,9 @@ def main():
             rend = row.End
             segment_len = rend - lend + 1
 
-            contig_new_lend += 1
+            contig_new_lend = contig_new_rend + 1
             contig_new_rend += contig_new_lend + segment_len - 1
-
+            
             print("\t".join([chromosome, str(lend), str(rend), str(contig_new_lend), str(contig_new_rend)]), file=minigenome_bed_ofh)
 
             # add short N spacer

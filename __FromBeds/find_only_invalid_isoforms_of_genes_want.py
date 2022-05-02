@@ -86,7 +86,7 @@ def main():
     logger.info(genes_want_stats.shape)
 
     logger.info("pruning insufficiently expressed entries")
-    genes_want_stats = genes_want_stats[gene_want_stats['sum_tpm'] >= min_sum_tpm ]
+    genes_want_stats = genes_want_stats[genes_want_stats['sum_tpm'] >= min_sum_tpm ]
     logger.info(genes_want_stats.shape)
     
     logger.info("done, writing final output file of the missing isoforms")

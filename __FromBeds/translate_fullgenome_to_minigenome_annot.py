@@ -85,7 +85,7 @@ def main():
     
         
     
-    data['Start'] = data['Start2'],astype(int)
+    data['Start'] = data['Start2'].astype(int)
     data['End'] = data['End2'].astype(int)
     data = data[ ["Chromosome", "Source", "Type", "Start", "End", "Something", "Strand", "Dot", "Info"] ]
 

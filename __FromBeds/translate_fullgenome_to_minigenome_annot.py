@@ -22,15 +22,15 @@ def main():
     parser.add_argument("--fullgenome_annot", type=str, required=True, help="input fullgenome gtf or gff3 file to translate coords")
     parser.add_argument("--translation_intervals", type=str, required=True, help="translation intervals tsv file")
     parser.add_argument("--output_gtf", type=str, required=True, help="output gtf filename")
-
-
+    parser.add_argument("--CPU", type=int, default=5, required=False, help="number of cores to use")
+    
     args = parser.parse_args()
 
     fullgenome_annot_filename = args.fullgenome_annot
     translation_intervals_filename = args.translation_intervals
     output_gtf = args.output_gtf
+    CPU = args.CPU
     
-
     logger.info("parsing {}".format(fullgenome_annot_filename))
 
     df = pd.read_csv(fullgenome_annot_filename, sep="\t", names=["Chromosome", "Source", "Type", "Start", "End", "Something", "Strand", "Dot", "Info"])
@@ -43,8 +43,8 @@ def main():
     logger.info("joining based on feature coordinate overlaps")
     pr_df = pr.PyRanges(df)
     pr_translation = pr.PyRanges(pd_translation)    
-    pr_join = pr_df.join(pr_translation)
-
+    pr_join = pr_df.join(pr_translation, nb_cpu=CPU)
+    
     logger.info("assigning adjusted coordinates")
     data = pr_join.df.copy()
     data['Start2'] = data['Start'] - data['Start_b'] + data['NewStart']

@@ -20,7 +20,7 @@ def main():
     parser.add_argument("--transcripts_fasta", type=str, required=True, help="fasta file containing all transcripts")
     parser.add_argument("--transcript_acc_list", type=str, required=True, help="file containing a list of tanscript identifiers to use (column name should be 'cdna_acc').")
     parser.add_argument("--Nspacer_length", type=int, default=10, help="spacer length between transcripts")
-    parser.add_argument("--contig_name", type=str, default="supp_transcripts", help="contig name and prefix for output files: .genome.fa and .genome.bed")
+    parser.add_argument("--contig_name", type=str, default="supp_transcripts", help="contig name and prefix for output files: .genome.fa and .genome.gff3")
     
     args = parser.parse_args()
 
@@ -38,7 +38,7 @@ def main():
 
 
     genome_fa_ofh = open(contig_name + ".genome.fa", "wt")
-    genome_bed_ofh = open(contig_name + ".genome.bed", "wt")
+    genome_gff3_ofh = open(contig_name + ".genome.gff3", "wt")
     
     Nspacer = "N" * Nspacer_length
 
@@ -61,7 +61,7 @@ def main():
         print("\t".join([contig_name, "supercontig", "cDNA_match", str(contig_new_lend), str(contig_new_rend),
                          ".", "+", ".",
                          f"ID={transcript_acc};Parent={transcript_acc};Target={transcript_acc} 1 {transcript_len}"]),
-              file=genome_bed_ofh)
+              file=genome_gff3_ofh)
 
         # add short N spacer
         print(transcript_seq + Nspacer, file=genome_fa_ofh, end='')

@@ -1,7 +1,10 @@
 
-test:
+make_minigenome:
 	../make_mini_genome.pl  --gtf data/annotation.gtf --genome_fa data/genome.fa --shrink_introns --accs_restrict_file genes.want.txt
 
+
+trim_utrs: make_minigenome
+	../util/gtf_UTR_trimmer.pl  minigenome.gtf minigenome.fa  > minigenome.UTRs_trimmed.gtf
 
 extract_minigenome_align_reads:
 	hisat2_extract_splice_sites.py minigenome.gtf  > minigenome.gtf.ss

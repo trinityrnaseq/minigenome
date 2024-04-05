@@ -118,8 +118,8 @@ main: {
     }
 
     
-    my %gene_to_gtf = &extract_gene_gtfs($gtf_file);
-
+    my %gene_to_gtf = &extract_gene_gtfs($gtf_file, \%RESTRICT);
+    
     
     my @gene_info_structs = &make_gene_info_structs(%gene_to_gtf);
     
@@ -447,7 +447,7 @@ sub get_genomic_region_sequence {
 
 ####
 sub extract_gene_gtfs {
-    my ($gtf_file, $gene_want_href) = @_;
+    my ($gtf_file, $restrict_href) = @_;
 
     my %gene_to_gtf;
 
@@ -466,7 +466,18 @@ sub extract_gene_gtfs {
         if (/gene_id \"([^\"]+)\"/) {
             $gene_id = $1;
         }
-        
+
+        my $transcript_id = "";
+        if (/transcript_id \"([^\"]+)\"/) {
+            $transcript_id = $1;
+        }
+
+        if (%$restrict_href) {
+            unless ( ($gene_id ne "" && $restrict_href->{$gene_id}) || ($transcript_id ne "" && $restrict_href->{$transcript_id}) ) {
+                next;
+            }
+        }
+                
         my $chr = $x[0];
         my $lend = $x[3];
         my $rend = $x[4];
@@ -480,7 +491,7 @@ sub extract_gene_gtfs {
             $line =~ s/gene_id \"\Q$gene_id\E\"/gene_id \"$gene_name\"/;
             $gene_id = $gene_name;
 
-            $line =~ s/transcript_id \"/transcript_id \"$gene_name^/;
+            #$line =~ s/transcript_id \"/transcript_id \"$gene_name^/;
             
         }
         

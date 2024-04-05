@@ -3,6 +3,10 @@ make_minigenome:
 	../make_mini_genome.pl  --gtf data/annotation.gtf --genome_fa data/genome.fa --shrink_introns --accs_restrict_file genes.want.txt
 
 
+make_minigenome_from_transcript_list:
+	../make_mini_genome.pl  --gtf data/annotation.gtf --genome_fa data/genome.fa --shrink_introns --accs_restrict_file transcripts.want.txt --out_prefix mini_by_transcripts
+
+
 trim_utrs: make_minigenome
 	../util/gtf_UTR_trimmer.pl  minigenome.gtf minigenome.fa  > minigenome.UTRs_trimmed.gtf
 

@@ -111,6 +111,8 @@ main: {
         }
         close $fh;
 
+        #print Dumper(\%RESTRICT);
+        
         if ($DEBUG) {
             print STDERR "accessions restricted to: " . Dumper(\%RESTRICT);
         }
@@ -134,7 +136,6 @@ main: {
     my $supercontig = "";
 
     foreach my $gene_struct (@gene_info_structs) {
-
         
         my $gene_id = $gene_struct->{gene};
         
@@ -144,11 +145,14 @@ main: {
         
         if ($RESTRICT_FLAG) {
 
-            my $found_id = &includes_restricted_id($gene_gtf, \%RESTRICT);
+            my @found_ids = &includes_restricted_id($gene_gtf, \%RESTRICT);
 
-            if ($found_id) {
-                print STDERR "Recovered ID: $found_id\n";
-                delete $RESTRICT{$found_id};
+            
+            if (@found_ids) {
+                print STDERR "Recovered ID(s): @found_ids\n";
+                for my $found_id  (@found_ids) {
+                    delete $RESTRICT{$found_id};
+                }
             }
             else {
                 print STDERR "\n-skipping:\n$gene_gtf\n\tnot in restrict list.\n\n" if $DEBUG;
@@ -475,14 +479,13 @@ sub extract_gene_gtfs {
         my $orig_info = "$chr,$gene_id,$lend,$rend,$orient";
 
         ## replace gene_id with gene_name
-        if ($line =~ /gene_name \"([^\"]+)\"/) {
-            my $gene_name = $1;
-            $line =~ s/gene_id \"\Q$gene_id\E\"/gene_id \"$gene_name\"/;
-            $gene_id = $gene_name;
-
-            $line =~ s/transcript_id \"/transcript_id \"$gene_name^/;
-            
-        }
+        #if ($line =~ /gene_name \"([^\"]+)\"/) {
+        #    my $gene_name = $1;
+        #    $line =~ s/gene_id \"\Q$gene_id\E\"/gene_id \"$gene_name\"/;
+        #    $gene_id = $gene_name;
+        #
+        #    $line =~ s/transcript_id \"/transcript_id \"$gene_name^/;   
+        #}
         
         $line .= " orig_coord_info \"$orig_info\";\n";
         
@@ -678,21 +681,24 @@ sub includes_restricted_id {
     $gene_gtf =~ /gene_id \"([^\"]+)\"/ or die "Error, cannot extract gene_id from $gene_gtf";
     my $gene_id = $1;
 
-    if ($restrict_href->{$gene_id}) {
-        return($gene_id);
-    }
 
-    if ($gene_gtf =~ /gene_name \"([^\"]+)\"/) {
+    my %found_ids;
+    
+    if ($restrict_href->{$gene_id}) {
+        $found_ids{$gene_id} = 1;
+    }
+    
+    while($gene_gtf =~ /gene_name \"([^\"]+)\"/g) {
         my $gene_name = $1;
         if ($restrict_href->{$gene_name}) {
-            return($gene_name);
+            $found_ids{$gene_name} = 1;
         }
     }
     
     while ($gene_gtf =~ /transcript_id \"([^\"]+)\"/g) {
         my $tx_id = $1;
         if ($restrict_href->{$tx_id}) {
-            return($tx_id);
+            $found_ids{$tx_id} = 1;
         }
     }
 
@@ -701,11 +707,11 @@ sub includes_restricted_id {
         my @pts = split(',', $orig_info);
         my $orig_gene_id = $pts[1];
         if ($restrict_href->{$orig_gene_id}) {
-            return($orig_gene_id);
+            $found_ids{$orig_gene_id} = 1;
         }
     }
     
-    return undef;
+    return(keys %found_ids);
 }
 
 
